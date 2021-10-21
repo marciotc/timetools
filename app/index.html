@@ -1,0 +1,141 @@
+<html>
+    <head>
+        <style>
+            * { margin:0;padding:0;}
+            body {font: 14px Arial, Helvetica, sans-serif; padding: 50px}
+            label {
+                display:block;
+            }
+            input, button {
+                font-size: 18px;
+                padding: 5px 10px;
+                flex: 1;
+                width: 200px;
+            }
+            .output {
+                font-size: 20px;
+                color: #555;
+                display:block;
+                padding: 2px 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Javascript EpochTime Nanoprecision</h1>
+        <br/>
+        <div>
+            <table>
+                <tbody>
+                    <tr class="epoch">
+                        <td colspan="3">
+                            <label for="epoch">Epoch</label>
+                            <input id="epoch" type="number" style="width: 250px" min="0"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <button onClick="calc('epoch')">Epoch -> Data</button>
+                        </td>
+                        <td colspan="2">
+                            <div id="date_output" class="output"></div>
+                        </td>
+                    </tr>
+                    <td>
+                        <td>&nbsp;</td>
+                    </td>
+                    <tr class="date">
+                        <td>
+                            <label for="year">Ano</label>
+                            <input id="year" type="number"/>
+                        </td>
+                        <td>
+                            <label for="month">Mês</label>
+                            <input id="month" type="number" min="1" max="12"/>
+                        </td>
+                        <td>
+                            <label for="day">Dia</label>
+                            <input id="day" type="number" min="1" max="31"/>
+                        </td>
+                    </tr>
+                    <tr class="date">
+                        <td>
+                            <label for="hours">Horas</label>
+                            <input id="hours" type="number" min="0" max="23"/>
+                        </td>
+                        <td>
+                            <label for="minutes">Minutos</label>
+                            <input id="minutes" type="number" min="0" max="59"/>
+                        </td>
+                        <td>
+                            <label for="seconds">Segundos</label>
+                            <input id="seconds" type="number" min="0" max="59"/>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <button onClick="calc('date')">Data -> Epoch</button>
+                        </td>
+                        <td colspan="2">
+                            <div id="epoch_output" class="output"></div>
+                        </td>
+                    </tr>
+                </tbody>    
+            </table>
+        </div>
+        <script>
+
+            const epochOutput = document.querySelector("#epoch_output")
+            const dateOutput = document.querySelector("#date_output")
+
+            const fields = ["epoch","year","month","day","hours","minutes","seconds"];
+            const parseEpoch = (nano) => {
+                const mili = nano / 1000000;
+                const dt = new Date(mili);
+                console.log(mili);
+                return fields.reduce((s,e) => {
+                    switch(e) {
+                        case 'epoch': s[e] = nano; break;
+                        case 'year': s[e] = dt.getFullYear(); break;
+                        case 'month': s[e] = (dt.getMonth()+1).toString().padStart(2,"0"); break;
+                        case 'day': s[e] = (dt.getDate()).toString().padStart(2,"0"); break;
+                        default:
+                            const cmd = 'dt.get'+(e[0].toUpperCase()+e.substring(1,))+"().toString().padStart(2,'0')";
+                            s[e] = eval(cmd)
+                    }
+                    return s;
+                },{})
+            }
+
+            const inputs = Array.from(document.querySelectorAll("input"))
+
+            const calc = (kind) => {
+                let val;
+                switch(kind) {
+                    case 'epoch':
+                        val = document.querySelector("#epoch").value
+                    break;
+                    case 'date':
+                        let vals = inputs.filter(e => e.id != 'epoch').map(e => e.value).map(e => e.toString().padStart(2,'0'));
+                        const date = new Date(vals.splice(0,3).join('-')+'T'+vals.join(":"));
+                        val = date.getTime()*1000000;
+                    break;
+                }
+                fillForms(val)
+            }
+            const fillForms = (date) => {
+                const dateParsed = parseEpoch(date);
+                const {year,month,day,hours,minutes,seconds} = dateParsed;
+                inputs.forEach(e => e.value = dateParsed[e.id])
+                epochOutput.innerHTML = date;
+                dateOutput.innerHTML = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.000000`
+            }
+
+            const defaults = () => {
+                const now = new Date().getTime()*1000000;
+                fillForms(now);
+            }
+            defaults();
+        </script>
+    </body>
+</html>
